@@ -94,8 +94,7 @@ void *ThreadFunc2(void *param) {
     }
     Y = 1;
 #if USE_CPU_FENCE
-    asm volatile("mfence" ::: "memory");
-    // prevent CPU ordering
+    asm volatile("mfence" ::: "memory"); // prevent CPU ordering
 #else
     asm volatile("" ::: "memory");  // prevent compiler ordering
 #endif
@@ -117,7 +116,7 @@ int main(int argc, char *argv[]) {
 #if USE_SINGLE_PROCESSOR
   cpu_set_t cpus;
   CPU_ZERO(&cpus);
-  CPU_SER(0, &cpus);
+  CPU_SET(0, &cpus);
   pthread_setaffinity_np(thread[0], sizeof(cpu_set_t), &cpus);
   pthread_setaffinity_np(thread[1], sizeof(cpu_set_t), &cpus);
 #endif
