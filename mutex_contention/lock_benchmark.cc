@@ -84,14 +84,14 @@ struct BenchmarkParams {
 
 BenchmarkParams g_benchmark_params[] = {
   // Reference
-    1, 10e-3f,      // 10 ms        100/s
+    1, 10e-3f,      // 10 ms        100/s 
 
     // Test 15000 locks per second with multiple threads
-    1, 1/15000.0f,
+    /*1, 1/15000.0f,
     2, 1/15000.0f,
     3, 1/15000.0f,
-    4, 1/15000.0f,
-
+    4, 1/15000.0f,*/
+    
     // Test various lock rates with 2 threads
     2, 10e-9f,      // 10 ns        100000000/s
     2, 31.6e-9f,    // 31.6 ns      31600000/s
@@ -102,6 +102,7 @@ BenchmarkParams g_benchmark_params[] = {
     2, 10e-6f,      // 10 us        100000/s
     2, 31.6e-6f,    // 31.6 us      31600/s
     2, 100e-6f,     // 100 us       10000/s
+    
 };
 
 void GetMonotonicTime(struct timespec *ts) {
@@ -126,11 +127,11 @@ void* ThreadProc(void *arg) {
   // Indicate ready, wait for start
   pthread_mutex_lock(&global_state.count_mutex);
   global_state.count++;
-  pthread_cond_signal(&global_state.count_cond);
+  pthread_cond_broadcast(&global_state.count_cond);
   pthread_mutex_unlock(&global_state.count_mutex);
 
   pthread_mutex_lock(&global_state.count_mutex);
-  while (global_state.count == 0) {
+  while (global_state.count != 0) {
     pthread_cond_wait(&global_state.count_cond,
                       &global_state.count_mutex);
   }
@@ -221,11 +222,16 @@ int main(int argc, char *argv[]) {
           fprintf(stderr, "error: pthread_create, rc: %d\n", rc);
           return -1;
         }
+
+        cpu_set_t cpus;
+        CPU_ZERO(&cpus);
+        CPU_SET(t, &cpus);
+        pthread_setaffinity_np(threads[t], sizeof(cpu_set_t), &cpus);
       }
 
       // Wait all the threads are ready
       pthread_mutex_lock(&global_state.count_mutex);
-      while (global_state.count == thread_count) {
+      while (global_state.count != thread_count) {
         pthread_cond_wait(&global_state.count_cond,
                           &global_state.count_mutex);
       }

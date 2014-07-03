@@ -51,14 +51,14 @@ unsigned int MersenneTwister::Integer() {
 }
 
 int main(int argc, char *argv[]) {
-  MersenneTwister prng(1234);
+  MersenneTwister prng(1);
   int i;
   for (i = 0; i < 10; ++i) {
     cout << prng.Integer() << endl;
   }
   cout << endl;
   double sum = 0;
-  for (i = 0; i < 100000; ++i) {
+  for (i = 0; i < 1500; ++i) {
     sum += prng.PoissonInterval(40);
   }
   cout << sum / i  << endl;
