@@ -83,15 +83,15 @@ struct BenchmarkParams {
 };
 
 BenchmarkParams g_benchmark_params[] = {
-  // Reference
-  //1, 10e-3f,      // 10 ms        100/s 
+    // Reference
+    1, 10e-3f,      // 10 ms        100/s 
 
     // Test 15000 locks per second with multiple threads
     1, 1/15000.0f,
     2, 1/15000.0f,
     3, 1/15000.0f,
     4, 1/15000.0f,
-    /*
+    
     // Test various lock rates with 2 threads
     2, 10e-9f,      // 10 ns        100000000/s
     2, 31.6e-9f,    // 31.6 ns      31600000/s
@@ -102,8 +102,6 @@ BenchmarkParams g_benchmark_params[] = {
     2, 10e-6f,      // 10 us        100000/s
     2, 31.6e-6f,    // 31.6 us      31600/s
     2, 100e-6f,     // 100 us       10000/s
-    */
-    
 };
 
 void GetMonotonicTime(struct timespec *ts) {
