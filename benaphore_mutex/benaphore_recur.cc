@@ -15,10 +15,12 @@ float GetElapsedTime(struct timespec *before, struct timespec *after) {
 }
 
 
+#define LIGHT_ASSERT(x) { if (!(x)) __builtin_trap(); }
+
 class RecursiveBenaphore {
  public:
   RecursiveBenaphore() : counter_(0), owner_(0), recursion_(0) {
-    sem_init(&semaphore_, 0, 1);
+    sem_init(&semaphore_, 0, 0);
   }
   ~RecursiveBenaphore() {
     sem_destroy(&semaphore_);
@@ -26,7 +28,7 @@ class RecursiveBenaphore {
   void Lock() {
     pthread_t thread_id = pthread_self();
     if (__sync_add_and_fetch(&counter_, 1) > 1) {
-      if (thread_id != owner_) {
+      if (!pthread_equal(thread_id, owner_)) {
         sem_wait(&semaphore_);
       }
     }
@@ -34,6 +36,8 @@ class RecursiveBenaphore {
     recursion_++;
   }
   void Unlock() {
+    pthread_t thread_id = pthread_self();
+    LIGHT_ASSERT(pthread_equal(thread_id, owner_));
     long recur = --recursion_;
     if (recur == 0) {
       owner_ = 0;
@@ -41,13 +45,17 @@ class RecursiveBenaphore {
     long result = __sync_sub_and_fetch(&counter_, 1);
     if (result > 0) {
       if (recur == 0) {
-        sem_post(&semaphore_);
+        int sem_value;
+        sem_getvalue(&semaphore_, &sem_value);
+        if (sem_value == 0) {
+          sem_post(&semaphore_);
+        }
       }
     }
   }
   bool TryLock() {
     pthread_t thread_id = pthread_self();
-    if (thread_id == owner_) {
+    if (pthread_equal(thread_id, owner_)) {
       __sync_add_and_fetch(&counter_, 1);
     } else {
       bool result = __sync_bool_compare_and_swap(&counter_, 0, 1);
@@ -66,6 +74,7 @@ class RecursiveBenaphore {
   pthread_t owner_;
   long recursion_;
 };
+
 
 int main(int argc, char *argv[]) {
   struct timespec start, end;

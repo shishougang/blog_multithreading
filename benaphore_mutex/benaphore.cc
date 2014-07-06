@@ -16,9 +16,8 @@ float GetElapsedTime(struct timespec *before, struct timespec *after) {
 
 class Benaphore {
  public:
-  Benaphore() {
-    counter_ = 0;
-    sem_init(&semaphore_, 0, 1);
+  Benaphore() : counter_(0) {
+    sem_init(&semaphore_, 0, 0);
   }
   ~Benaphore() {
     sem_destroy(&semaphore_);
